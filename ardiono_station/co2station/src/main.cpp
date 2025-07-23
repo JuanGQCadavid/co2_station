@@ -19,6 +19,7 @@ const char* ssid     = "DPSLab";
 const char* password = "Asdf1234";
 const char* mqtt_server = "192.168.0.86";  // or use your local broker IP
 
+String ipString = "";
 
 int aq;
 int co2;
@@ -45,6 +46,7 @@ void reconnect() {
       delay(5000);
     }
   }
+  ipString = WiFi.localIP().toString();
 }
 
 void setup() {
@@ -103,12 +105,38 @@ void setup() {
   delay(5000);
 }
 
+
+// char* generatePublishTopic(const char *topic)  {
+//   char buffer[64];
+
+//   sprintf(buffer, "station/%s/%s", ipString, topic);
+//   Serial.println(buffer);
+
+//   return buffer;
+// }
+
+String generatePublishTopic(const char *topic) {
+  String s = "station/" + ipString + "/" + String(topic);
+  Serial.println(s);
+  return s;
+}
+
+void publishInt(int val, const char* name){
+  char tempVal[5];  // Enough for a 5-digit int and null terminator
+  itoa(val, tempVal, 10);  // Base 10 conversion
+  client.publish(generatePublishTopic(name).c_str(), tempVal);
+}
+
+void publishFloat(float val, const char* name){
+  char tempVal[8];
+  dtostrf(val, 1, 2, tempVal); 
+  client.publish(generatePublishTopic(name).c_str(), tempVal);
+}
+
 void loop() {
   if (!client.connected()) {
     reconnect();
   }
-  
-  String ipString = WiFi.localIP().toString();
 
   client.loop();
 
@@ -156,16 +184,11 @@ void loop() {
 
     Serial.println();
 
-    char temphum[8];
-    dtostrf(hum, 1, 2, temphum); // Convert float to char*
-    client.publish("station/1/aq", temphum);
-
-    char tempCo2[6];  // Enough for a 5-digit int and null terminator
-    itoa(co2, tempCo2, 10);  // Base 10 conversion
-    client.publish("station/1/co2", tempCo2);
-
-    // String serverPath = serverName +"?aq="+String(aq)+"&co2="+String(co2)+"&tvoc="+String(tvoc)+"&hum="+String(hum)+"&temp="+String(temp);
-
+    publishFloat(hum, "hum");
+    publishFloat(temp, "temp");
+    publishFloat(tvoc, "tvoc");
+    publishInt(co2, "co2");
+    publishInt(aq, "aq");
   }
   delay(200);
 }
