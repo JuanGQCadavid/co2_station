@@ -1,0 +1,17 @@
+1753280907: mosquitto version 2.0.22 starting
+1753280907: Config loaded from /mosquitto/config/mosquitto.conf.
+1753280907: Opening ipv4 listen socket on port 1883.
+1753280907: Opening ipv6 listen socket on port 1883.
+1753280907: mosquitto version 2.0.22 running
+1753280922: New connection from 172.17.0.1:61002 on port 1883.
+1753280922: New client connected from 172.17.0.1:61002 as mymqtt-774973722663931 (p2, c1, k90).
+1753281303: Client mymqtt-774973722663931 closed its connection.
+1753281814: New connection from 172.17.0.1:55382 on port 1883.
+1753281814: New client connected from 172.17.0.1:55382 as mymqtt-774973722663931 (p2, c1, k90).
+1753281839: Client mymqtt-774973722663931 closed its connection.
+1753283605: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1753283665: New connection from 172.17.0.1:58086 on port 1883.
+1753283665: New client connected from 172.17.0.1:58086 as mymqtt-774973722663931 (p2, c1, k90).
+1753283671: New connection from 172.17.0.1:56866 on port 1883.
+1753283671: New client connected from 172.17.0.1:56866 as ESP32S2Client (p2, c1, k15).
+1753283970: Client mymqtt-774973722663931 closed its connection.
