@@ -1,0 +1,45 @@
+
+
+services:
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto
+    ports:
+      - 1883:1883
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - mosquitto-data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+
+  influxdb2:
+    container_name: influxdb2
+    image: influxdb:2
+    ports:
+      - 8086:8086
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=Asdf1234
+      - DOCKER_INFLUXDB_INIT_ORG=ut
+      - DOCKER_INFLUXDB_INIT_BUCKET=stations
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-auth-token
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+  
+  telegraf:
+    depends_on:
+      - influxdb2
+    container_name: telegraf
+    image: telegraf
+    ports:
+      - 8125:8125
+      - 8092:8092
+      - 8094:8094
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+
+volumes:
+  influxdb-data:
+  mosquitto-data:
+
+
