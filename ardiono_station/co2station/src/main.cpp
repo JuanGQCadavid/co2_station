@@ -17,8 +17,7 @@ int ensStatus;
 
 const char* ssid     = "DPSLab";
 const char* password = "Asdf1234";
-const char* mqtt_server = "192.168.0.86";  // or use your local broker IP
-
+const char* mqtt_server = "192.168.0.86"; 
 String ipString = "";
 
 int aq;
@@ -27,16 +26,12 @@ float tvoc;
 float hum;
 float temp;
 
-WiFiUDP ntpUDP;
-
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-// Reconnect to MQTT broker
 void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
-    // You can give your ESP32-S2 a unique client ID
     if (client.connect("ESP32S2Client")) {
       Serial.println("connected");
     } else {
@@ -105,16 +100,6 @@ void setup() {
   delay(5000);
 }
 
-
-// char* generatePublishTopic(const char *topic)  {
-//   char buffer[64];
-
-//   sprintf(buffer, "station/%s/%s", ipString, topic);
-//   Serial.println(buffer);
-
-//   return buffer;
-// }
-
 String generatePublishTopic(const char *topic) {
   String s = "station/" + ipString + "/" + String(topic);
   Serial.println(s);
@@ -122,8 +107,8 @@ String generatePublishTopic(const char *topic) {
 }
 
 void publishInt(int val, const char* name){
-  char tempVal[5];  // Enough for a 5-digit int and null terminator
-  itoa(val, tempVal, 10);  // Base 10 conversion
+  char tempVal[5]; 
+  itoa(val, tempVal, 10);
   client.publish(generatePublishTopic(name).c_str(), tempVal);
 }
 
@@ -142,39 +127,31 @@ void loop() {
 
   if (myENS.checkDataStatus()) {
     Serial.print("Air Quality Index (1-5) : ");
-    //Serial.println(myENS.getAQI());
-  aq=myENS.getAQI();
-  Serial.println(aq);
+    aq=myENS.getAQI();
+    Serial.println(aq);
 
-
-   Serial.print("CO2 concentration: ");
-    //Serial.print(myENS.getECO2());
-    //Serial.println("ppm");
+    Serial.print("CO2 concentration: ");
     int co2=myENS.getECO2();
     Serial.println(co2);
 
 
     Serial.print("Total Volatile Organic Compounds: ");
     tvoc=myENS.getTVOC();
-    //Serial.print(myENS.getTVOC());
     Serial.println(tvoc);
-
-
-   
 
     Serial.print("Humidity: ");
     hum=myBME280.readFloatHumidity();
     Serial.println(hum);
 
     //Serial.print("Pressure: ");
-   // Serial.print(myBME280.readFloatPressure(), 0);
-   // Serial.println("Pa");
+    // Serial.print(myBME280.readFloatPressure(), 0);
+    // Serial.println("Pa");
 
     //Serial.print("Alt: ");
     //Serial.print(myBME280.readFloatAltitudeMeters(), 1);
     //Serial.println("meters");
     //Serial.print(myBME280.readFloatAltitudeFeet(), 1);
-   // Serial.println("feet");
+    // Serial.println("feet");
 
     Serial.print("Temp: ");
     temp=myBME280.readTempC();
