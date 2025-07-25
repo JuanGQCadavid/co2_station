@@ -1,6 +1,3 @@
-#  docker run -it -p 1883:1883 eclipse-mosquitto
-
-
 
 mosquitto:
 	docker run -it -d --name mosquitto \
@@ -9,3 +6,7 @@ mosquitto:
 		-v ./mosquitto/data:/mosquitto/data \
 		-v ./mosquitto/log:/mosquitto/log \
 		eclipse-mosquitto
+
+
+docker:
+	docker compose up --build -d
