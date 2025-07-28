@@ -10,6 +10,16 @@ services:
       - ./mosquitto/config:/mosquitto/config
       - mosquitto-data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
+  
+  drift:
+    depends_on:
+      - mosquitto
+    container_name: drift
+    build:
+      context: ./data-orchestation
+      dockerfile: Extract.Dockerfile
+      args: 
+        CMD: extract
 
   influxdb2:
     container_name: influxdb2

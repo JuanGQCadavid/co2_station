@@ -172,12 +172,12 @@ void loop() {
 
     StaticJsonDocument<256> doc;
     char jsonBuffer[256];
-    doc["ipAddress"] = ipString;
-    doc["humidity"] = hum;
-    doc["temperature"] = temp;
-    doc["tvoc"] = tvoc;
-    doc["co2"] = co2;
-    doc["aqi"] = aq;
+    doc["ipAddress"] = ipString; //String
+    doc["humidity"] = hum; // float
+    doc["temperature"] = temp;// float
+    doc["tvoc"] = tvoc; // float
+    doc["co2"] = co2; //int
+    doc["aqi"] = aq; // int
     serializeJson(doc, jsonBuffer);
     client.publish("station/report", jsonBuffer);
   }
