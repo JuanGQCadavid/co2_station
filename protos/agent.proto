@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package agent;
+option go_package = "github.com/JuanGQCadavid/co2_station/data-orchestation/pb";
+
+service AgentControl {
+    rpc moveToStation(MoveCommand) returns (Empty);
+    rpc reportStatus(Empty) returns (Status);
+}
+
+
+message MoveCommand {
+    string stationId = 1;
+}
+
+message Empty {
+}
+
+enum AgentState {
+    IN_TRANSIT = 0;
+    IN_STATION = 1;
+    IN_BASE = 2;
+    ON_ERROR = 3;
+}
+
+message Status {
+    AgentState state = 1;
+    string stationId = 2;
+    float batteryState = 3;
+}
+
