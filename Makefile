@@ -8,5 +8,5 @@ mosquitto:
 		eclipse-mosquitto
 
 
-docker:
-	docker compose up --build -d
+run:
+	git pull && docker compose up --build -d
