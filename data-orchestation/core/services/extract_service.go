@@ -51,7 +51,7 @@ func (srv *ExtractService) Handle(msg paho.PublishReceived) (bool, error) {
 }
 
 func (srv *ExtractService) applyCorrections(payload *domain.StationReport) *domain.StationReport {
-	payload.Temperature = payload.Temperature + 4.43
-	payload.Humidity = payload.Humidity - 12.27
+	payload.Temperature = payload.Temperature - 4.43
+	payload.Humidity = payload.Humidity + 12.27
 	return payload
 }
