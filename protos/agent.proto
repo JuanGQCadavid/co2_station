@@ -4,13 +4,18 @@ package agent;
 option go_package = "github.com/JuanGQCadavid/co2_station/data-orchestation/pb";
 
 service AgentControl {
-    rpc moveToStation(MoveCommand) returns (Empty);
-    rpc reportStatus(Empty) returns (Status);
+    rpc MoveToStation(MoveCommand) returns (Response);
+    rpc ReportStatus(Empty) returns (Status);
 }
 
 
 message MoveCommand {
     string stationId = 1;
+}
+
+message Response {
+    bool ok = 1;
+    string onError = 2;
 }
 
 message Empty {

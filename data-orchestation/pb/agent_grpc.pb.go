@@ -19,15 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AgentControl_MoveToStation_FullMethodName = "/agent.AgentControl/moveToStation"
-	AgentControl_ReportStatus_FullMethodName  = "/agent.AgentControl/reportStatus"
+	AgentControl_MoveToStation_FullMethodName = "/agent.AgentControl/MoveToStation"
+	AgentControl_ReportStatus_FullMethodName  = "/agent.AgentControl/ReportStatus"
 )
 
 // AgentControlClient is the client API for AgentControl service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AgentControlClient interface {
-	MoveToStation(ctx context.Context, in *MoveCommand, opts ...grpc.CallOption) (*Empty, error)
+	MoveToStation(ctx context.Context, in *MoveCommand, opts ...grpc.CallOption) (*Response, error)
 	ReportStatus(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Status, error)
 }
 
@@ -39,9 +39,9 @@ func NewAgentControlClient(cc grpc.ClientConnInterface) AgentControlClient {
 	return &agentControlClient{cc}
 }
 
-func (c *agentControlClient) MoveToStation(ctx context.Context, in *MoveCommand, opts ...grpc.CallOption) (*Empty, error) {
+func (c *agentControlClient) MoveToStation(ctx context.Context, in *MoveCommand, opts ...grpc.CallOption) (*Response, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Empty)
+	out := new(Response)
 	err := c.cc.Invoke(ctx, AgentControl_MoveToStation_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (c *agentControlClient) ReportStatus(ctx context.Context, in *Empty, opts .
 // All implementations must embed UnimplementedAgentControlServer
 // for forward compatibility.
 type AgentControlServer interface {
-	MoveToStation(context.Context, *MoveCommand) (*Empty, error)
+	MoveToStation(context.Context, *MoveCommand) (*Response, error)
 	ReportStatus(context.Context, *Empty) (*Status, error)
 	mustEmbedUnimplementedAgentControlServer()
 }
@@ -75,7 +75,7 @@ type AgentControlServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAgentControlServer struct{}
 
-func (UnimplementedAgentControlServer) MoveToStation(context.Context, *MoveCommand) (*Empty, error) {
+func (UnimplementedAgentControlServer) MoveToStation(context.Context, *MoveCommand) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MoveToStation not implemented")
 }
 func (UnimplementedAgentControlServer) ReportStatus(context.Context, *Empty) (*Status, error) {
@@ -146,11 +146,11 @@ var AgentControl_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AgentControlServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "moveToStation",
+			MethodName: "MoveToStation",
 			Handler:    _AgentControl_MoveToStation_Handler,
 		},
 		{
-			MethodName: "reportStatus",
+			MethodName: "ReportStatus",
 			Handler:    _AgentControl_ReportStatus_Handler,
 		},
 	},
