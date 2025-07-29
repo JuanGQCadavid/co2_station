@@ -2,7 +2,7 @@ FROM golang:alpine3.20 as builder
 
 ENV GOOS="linux"
 ENV CGO_ENABLED="0"
-ARG GOARCH="arm64"
+ARG GOARCH="amd64"
 
 ARG CMD="http"
 

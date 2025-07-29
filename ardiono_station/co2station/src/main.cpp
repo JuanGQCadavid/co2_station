@@ -18,7 +18,7 @@ int ensStatus;
 
 const char* ssid     = "DPSLab";
 const char* password = "Asdf1234";
-const char* mqtt_server = "192.168.0.86"; 
+const char* mqtt_server = "192.168.0.40"; 
 String ipString = "";
 
 int aq;
