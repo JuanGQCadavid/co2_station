@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
 	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -18,7 +19,7 @@ var (
 			|> range(start: %s, stop: %s)
 			|> filter(fn: (r) => r["_measurement"] == "sensor")
 			|> filter(fn: (r) => r["_field"] == "aqi" or r["_field"] == "co2" or r["_field"] == "humidity" or r["_field"] == "temperature" or r["_field"] == "tvoc")
-			|> filter(fn: (r) => r["ipAddress"] == "192.168.0.62")
+			|> filter(fn: (r) => r["ipAddress"] == %q)
 			|> filter(fn: (r) => r["topic"] == "report/drift")
 			|> aggregateWindow(every: 1m, fn: mean, createEmpty: false)
 			|> yield(name: "mean")
@@ -36,17 +37,50 @@ type SensorReport struct {
 }
 
 func main() {
-	client := influxdb2.NewClient(influxURI, influxToken)
 
-	queryAPI := client.QueryAPI(influxORG)
 	start := time.Date(2025, 7, 27, 0, 0, 0, 0, time.UTC)
 	stop := time.Date(2025, 7, 29, 0, 0, 0, 0, time.UTC)
 
-	thaQuery := fmt.Sprintf(query, start.Format(time.RFC3339), stop.Format(time.RFC3339))
+	influxRepo := NewInfluxDBRepository(
+		influxURI, influxToken, influxORG,
+	)
+
+	reports, err := influxRepo.GetRecords(start, stop, "192.168.0.62")
+
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	for _, report := range reports {
+		fmt.Printf("%+v \n", report)
+	}
+}
+
+type InfluxDBRepository struct {
+	client      influxdb2.Client
+	influxURI   string
+	influxToken string
+	influxORG   string
+}
+
+func NewInfluxDBRepository(influxURI, influxToken, influxORG string) *InfluxDBRepository {
+	return &InfluxDBRepository{
+		client:      influxdb2.NewClient(influxURI, influxToken),
+		influxURI:   influxURI,
+		influxToken: influxToken,
+		influxORG:   influxORG,
+	}
+}
+
+func (repo *InfluxDBRepository) GetRecords(start, stop time.Time, stationIP string) ([]*SensorReport, error) {
+	queryAPI := repo.client.QueryAPI(influxORG)
+	thaQuery := fmt.Sprintf(query, start.Format(time.RFC3339), stop.Format(time.RFC3339), stationIP)
+
 	result, err := queryAPI.Query(context.Background(), thaQuery)
 
 	if err != nil {
-		panic(err.Error())
+		log.Printf("queryAPI query error: %s\n", err.Error())
+		return nil, result.Err()
 	}
 
 	reports := make(map[time.Time]*SensorReport)
@@ -73,31 +107,20 @@ func main() {
 		}
 		fmt.Printf("Time: %s, Value: %v\n", result.Record().Time(), result.Record().Values())
 	}
+
 	if result.Err() != nil {
-		log.Fatalf("Query error: %s", result.Err().Error())
+		log.Printf("Query error: %s\n", result.Err().Error())
+		return nil, result.Err()
 	}
 
-	for _, report := range reports {
-		fmt.Printf("%+v \n", report)
+	records := make([]*SensorReport, 0, len(reports))
+	for _, r := range reports {
+		records = append(records, r)
 	}
-}
 
-type InfluxDBRepository struct {
-	client      influxdb2.Client
-	influxURI   string
-	influxToken string
-	influxORG   string
-}
+	sort.Slice(records, func(i, j int) bool {
+		return records[i].Date.After(records[j].Date)
+	})
 
-func NewInfluxDBRepository(influxURI, influxToken, influxORG string) *InfluxDBRepository {
-	return &InfluxDBRepository{
-		client:      influxdb2.NewClient(influxURI, influxToken),
-		influxURI:   influxURI,
-		influxToken: influxToken,
-		influxORG:   influxORG,
-	}
-}
-
-func (repo *InfluxDBRepository) GetRecords(from, until time.Time) []*SensorReport {
-	queryAPI := repo.client.QueryAPI(influxORG)
+	return records, nil
 }
