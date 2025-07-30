@@ -1,1 +1,103 @@
-package influxadapter
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"time"
+
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+)
+
+var (
+	influxURI   = "http://localhost:8086"
+	influxToken = "my-super-secret-auth-token"
+	influxORG   = "ut"
+	query       = ` 
+		from(bucket: "stations")
+			|> range(start: %s, stop: %s)
+			|> filter(fn: (r) => r["_measurement"] == "sensor")
+			|> filter(fn: (r) => r["_field"] == "aqi" or r["_field"] == "co2" or r["_field"] == "humidity" or r["_field"] == "temperature" or r["_field"] == "tvoc")
+			|> filter(fn: (r) => r["ipAddress"] == "192.168.0.62")
+			|> filter(fn: (r) => r["topic"] == "report/drift")
+			|> aggregateWindow(every: 1m, fn: mean, createEmpty: false)
+			|> yield(name: "mean")
+	`
+)
+
+type SensorReport struct {
+	Date        time.Time // _time:2025-07-28 13:16:00 +0000 UTC
+	StationIP   string    // ipAddress:192.168.0.62.   _value:2
+	AQI         float64   //_field:aqi.   _value:2
+	CO2         float64   // _field:co2
+	Humidity    float64   //_field:humidity
+	Temperature float64   //_field:temperature
+	Tvoc        float64   //_field:tvoc
+}
+
+func main() {
+	client := influxdb2.NewClient(influxURI, influxToken)
+
+	queryAPI := client.QueryAPI(influxORG)
+	start := time.Date(2025, 7, 27, 0, 0, 0, 0, time.UTC)
+	stop := time.Date(2025, 7, 29, 0, 0, 0, 0, time.UTC)
+
+	thaQuery := fmt.Sprintf(query, start.Format(time.RFC3339), stop.Format(time.RFC3339))
+	result, err := queryAPI.Query(context.Background(), thaQuery)
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	reports := make(map[time.Time]*SensorReport)
+
+	for result.Next() {
+		if reports[result.Record().Time()] == nil {
+			reports[result.Record().Time()] = &SensorReport{
+				Date:      result.Record().Time(),
+				StationIP: result.Record().Values()["ipAddress"].(string),
+			}
+		}
+
+		switch result.Record().Field() {
+		case "aqi":
+			reports[result.Record().Time()].AQI = result.Record().Value().(float64)
+		case "co2":
+			reports[result.Record().Time()].CO2 = result.Record().Value().(float64)
+		case "humidity":
+			reports[result.Record().Time()].Humidity = result.Record().Value().(float64)
+		case "temperature":
+			reports[result.Record().Time()].Temperature = result.Record().Value().(float64)
+		case "tvoc":
+			reports[result.Record().Time()].Tvoc = result.Record().Value().(float64)
+		}
+		fmt.Printf("Time: %s, Value: %v\n", result.Record().Time(), result.Record().Values())
+	}
+	if result.Err() != nil {
+		log.Fatalf("Query error: %s", result.Err().Error())
+	}
+
+	for _, report := range reports {
+		fmt.Printf("%+v \n", report)
+	}
+}
+
+type InfluxDBRepository struct {
+	client      influxdb2.Client
+	influxURI   string
+	influxToken string
+	influxORG   string
+}
+
+func NewInfluxDBRepository(influxURI, influxToken, influxORG string) *InfluxDBRepository {
+	return &InfluxDBRepository{
+		client:      influxdb2.NewClient(influxURI, influxToken),
+		influxURI:   influxURI,
+		influxToken: influxToken,
+		influxORG:   influxORG,
+	}
+}
+
+func (repo *InfluxDBRepository) GetRecords(from, until time.Time) []*SensorReport {
+	queryAPI := repo.client.QueryAPI(influxORG)
+}
