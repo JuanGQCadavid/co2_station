@@ -1,4 +1,4 @@
-package main
+package influxadapter
 
 import (
 	"context"
@@ -11,10 +11,7 @@ import (
 )
 
 var (
-	influxURI   = "http://localhost:8086"
-	influxToken = "my-super-secret-auth-token"
-	influxORG   = "ut"
-	query       = ` 
+	query = ` 
 		from(bucket: "stations")
 			|> range(start: %s, stop: %s)
 			|> filter(fn: (r) => r["_measurement"] == "sensor")
@@ -28,32 +25,12 @@ var (
 
 type SensorReport struct {
 	Date        time.Time // _time:2025-07-28 13:16:00 +0000 UTC
-	StationIP   string    // ipAddress:192.168.0.62.   _value:2
-	AQI         float64   //_field:aqi.   _value:2
+	StationIP   string    // ipAddress:192.168.0.62.
+	AQI         float64   //_field:aqi.
 	CO2         float64   // _field:co2
 	Humidity    float64   //_field:humidity
 	Temperature float64   //_field:temperature
 	Tvoc        float64   //_field:tvoc
-}
-
-func main() {
-
-	start := time.Date(2025, 7, 27, 0, 0, 0, 0, time.UTC)
-	stop := time.Date(2025, 7, 29, 0, 0, 0, 0, time.UTC)
-
-	influxRepo := NewInfluxDBRepository(
-		influxURI, influxToken, influxORG,
-	)
-
-	reports, err := influxRepo.GetRecords(start, stop, "192.168.0.62")
-
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-
-	for _, report := range reports {
-		fmt.Printf("%+v \n", report)
-	}
 }
 
 type InfluxDBRepository struct {
@@ -73,7 +50,7 @@ func NewInfluxDBRepository(influxURI, influxToken, influxORG string) *InfluxDBRe
 }
 
 func (repo *InfluxDBRepository) GetRecords(start, stop time.Time, stationIP string) ([]*SensorReport, error) {
-	queryAPI := repo.client.QueryAPI(influxORG)
+	queryAPI := repo.client.QueryAPI(repo.influxORG)
 	thaQuery := fmt.Sprintf(query, start.Format(time.RFC3339), stop.Format(time.RFC3339), stationIP)
 
 	result, err := queryAPI.Query(context.Background(), thaQuery)
@@ -85,6 +62,7 @@ func (repo *InfluxDBRepository) GetRecords(start, stop time.Time, stationIP stri
 
 	reports := make(map[time.Time]*SensorReport)
 
+	// Casting
 	for result.Next() {
 		if reports[result.Record().Time()] == nil {
 			reports[result.Record().Time()] = &SensorReport{
@@ -113,14 +91,23 @@ func (repo *InfluxDBRepository) GetRecords(start, stop time.Time, stationIP stri
 		return nil, result.Err()
 	}
 
+	// Getting values
+
 	records := make([]*SensorReport, 0, len(reports))
 	for _, r := range reports {
 		records = append(records, r)
 	}
 
+	// Sorting
+	return repo.sortRecords(records), nil
+
+}
+
+func (repo *InfluxDBRepository) sortRecords(records []*SensorReport) []*SensorReport {
+
 	sort.Slice(records, func(i, j int) bool {
 		return records[i].Date.After(records[j].Date)
 	})
 
-	return records, nil
+	return records
 }

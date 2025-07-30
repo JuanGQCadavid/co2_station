@@ -1,8 +1,0 @@
-from(bucket: "stations")
-    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
-    |> filter(fn: (r) => r["_measurement"] == "sensor")
-    |> filter(fn: (r) => r["_field"] == "aqi" or r["_field"] == "co2" or r["_field"] == "humidity" or r["_field"] == "temperature" or r["_field"] == "tvoc")
-    |> filter(fn: (r) => r["ipAddress"] == "192.168.0.62")
-    |> filter(fn: (r) => r["topic"] == "report/drift")
-    |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
-    |> yield(name: "mean")
