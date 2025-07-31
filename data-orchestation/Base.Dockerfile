@@ -9,6 +9,7 @@ ARG CMD="http"
 WORKDIR /app
 
 COPY cmd/${CMD} cmd/${CMD}
+COPY pb pb
 COPY core core
 
 COPY go.mod go.mod

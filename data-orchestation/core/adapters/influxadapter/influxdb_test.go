@@ -22,13 +22,17 @@ func TestFetch(t *testing.T) {
 		influxURI, influxToken, influxORG,
 	)
 
-	reports, err := influxRepo.GetRecords(start, stop, "192.168.0.62")
+	stations, err := influxRepo.GetRecords(start, stop)
 
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	for _, report := range reports {
-		fmt.Printf("%+v \n", report)
+	for ip, stationReports := range stations {
+		fmt.Println(ip)
+		for _, report := range stationReports {
+			fmt.Printf(" \t %+v \n", report)
+		}
+
 	}
 }
