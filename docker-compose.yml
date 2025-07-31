@@ -17,9 +17,25 @@ services:
     container_name: drift
     build:
       context: ./data-orchestation
-      dockerfile: Extract.Dockerfile
+      dockerfile: Base.Dockerfile
       args: 
-        CMD: extract
+        CMD: drift
+  
+  exporter:
+    depends_on:
+      - mosquitto
+    container_name: exporter
+    build:
+      context: ./data-orchestation
+      dockerfile: Base.Dockerfile
+      args: 
+        CMD: exporter
+    ports:
+      -  8000:8000
+    environment:
+      - INFLUX_URI=http://influxdb2:8086
+      - INFLUX_TOKEN=my-super-secret-auth-token
+      - INFLUX_ORG=ut
 
   influxdb2:
     container_name: influxdb2
