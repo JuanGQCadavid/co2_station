@@ -42,7 +42,7 @@ func NewInfluxDBRepository(influxURI, influxToken, influxORG string) *InfluxDBRe
 func (repo *InfluxDBRepository) GetRecords(start, stop time.Time) (map[string][]*domain.SensorReport, error) {
 	queryAPI := repo.client.QueryAPI(repo.influxORG)
 	thaQuery := fmt.Sprintf(query, start.Format(time.RFC3339), stop.Format(time.RFC3339))
-
+	log.Println(thaQuery)
 	result, err := queryAPI.Query(context.Background(), thaQuery)
 
 	if err != nil {

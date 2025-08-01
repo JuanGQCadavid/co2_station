@@ -1,6 +1,10 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/JuanGQCadavid/co2_station/data-orchestation/pb"
+)
 
 type StationReport struct {
 	IpAddress   string  `json:"ipAddress"`
@@ -24,4 +28,10 @@ type SensorReport struct {
 type StationResult struct {
 	StationIP string
 	Indicator float64
+}
+
+type TurtleState struct {
+	Battery    float32
+	State      pb.AgentState
+	StattionId string
 }

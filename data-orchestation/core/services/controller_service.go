@@ -171,5 +171,6 @@ func (svc *ControllerService) WaitUntilDoneOrError(stationIP string) error {
 
 // Intervening
 func (svc *ControllerService) Wait(ctx context.Context) error {
+	<-ctx.Done()
 	return nil
 }
