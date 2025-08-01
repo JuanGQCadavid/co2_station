@@ -47,7 +47,7 @@ func (svc *ControllerService) FindTheStation() (*domain.StationResult, error) {
 }
 
 func (svc *ControllerService) AnalyzeStationIndicator(timeWindow time.Duration) ([]*domain.StationResult, error) {
-	reports, err := svc.repository.GetRecords(time.Now(), time.Now().Add(-timeWindow))
+	reports, err := svc.repository.GetRecords(time.Now().Add(-timeWindow), time.Now())
 
 	if err != nil {
 		log.Println("Err from repository ", err.Error())
