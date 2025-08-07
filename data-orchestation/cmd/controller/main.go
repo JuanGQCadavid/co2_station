@@ -121,6 +121,13 @@ func OnSensingFunc(_ *StateData) {
 
 	theStation, err := service.FindTheStation(timeWindow)
 
+	if err == services.ErrSensorsNoSensing {
+		log.Println("There is not data on the database, sleeping for 1 min", err.Error())
+		time.Sleep(1 * time.Minute)
+		states[InitState](nil)
+		return
+	}
+
 	if err != nil {
 		states[OnError](&StateData{
 			Error:        err,
