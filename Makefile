@@ -9,7 +9,7 @@ mosquitto:
 
 
 run:
-	git pull && docker compose up --build -d
+	git pull && docker compose up --build -d && docker compose logs -f
 
 stop:
 	docker compose down

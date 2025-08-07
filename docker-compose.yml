@@ -44,11 +44,14 @@ services:
       dockerfile: Base.Dockerfile
       args: 
         CMD: turtle
+    ports:
+      -  50051:50051
 
   controller:
     depends_on:
       - mosquitto
       - turtle
+      - database
     container_name: controller
     build:
       context: ./data-orchestation
@@ -62,6 +65,33 @@ services:
       - SLACK_TOKEN=${SLACK_TOKEN} #TODO
       - SLACK_CHANNEL_ID=${SLACK_CHANNEL_ID} #TODO
       - TURTLE_IP_ADDRESS=turtle:50051 #TODO
+      - ACTIONS_HOST=database
+      - ACTIONS_USERNAME=admin
+      - ACTIONS_PASSWORD=Asdf1234
+      - ACTIONS_DB=actions
+      - ACTIONS_PORT=5432
+  
+  database:
+    container_name: database
+    image: postgres
+    restart: always
+    ports:
+      -  5432:5432
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=Asdf1234
+      - POSTGRES_DB=actions
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+  
+  adminer:
+    depends_on:
+      - database
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
 
   influxdb2:
     container_name: influxdb2
@@ -77,7 +107,7 @@ services:
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-auth-token
     volumes:
       - influxdb-data:/var/lib/influxdb2
-  
+
   telegraf:
     depends_on:
       - influxdb2
@@ -93,5 +123,4 @@ services:
 volumes:
   influxdb-data:
   mosquitto-data:
-
-
+  pg-data:

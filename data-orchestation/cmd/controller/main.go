@@ -44,8 +44,8 @@ var (
 
 var (
 	STATION_ID              = "base"
-	WAITING_ON_INTERVENTION = 15 * time.Minute
-	WAITING_ON_BASE         = 30 * time.Minute
+	WAITING_ON_INTERVENTION = 15 * time.Minute // 1 * time.Minute
+	WAITING_ON_BASE         = 30 * time.Minute // 3 * time.Minute
 )
 
 type StateData struct {
