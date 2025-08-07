@@ -37,6 +37,32 @@ services:
       - INFLUX_TOKEN=my-super-secret-auth-token
       - INFLUX_ORG=ut
 
+  turtle:
+    container_name: turtle
+    build:
+      context: ./data-orchestation
+      dockerfile: Base.Dockerfile
+      args: 
+        CMD: turtle
+
+  controller:
+    depends_on:
+      - mosquitto
+      - turtle
+    container_name: controller
+    build:
+      context: ./data-orchestation
+      dockerfile: Base.Dockerfile
+      args: 
+        CMD: controller
+    environment:
+      - INFLUX_URI=http://influxdb2:8086
+      - INFLUX_TOKEN=my-super-secret-auth-token
+      - INFLUX_ORG=ut
+      - SLACK_TOKEN=${SLACK_TOKEN} #TODO
+      - SLACK_CHANNEL_ID=${SLACK_CHANNEL_ID} #TODO
+      - TURTLE_IP_ADDRESS=turtle:50051 #TODO
+
   influxdb2:
     container_name: influxdb2
     image: influxdb:2
