@@ -15,7 +15,6 @@ import (
 )
 
 var (
-	timeWindow   = 24 * 31 * time.Hour // The last month
 	ErrTurtleDie = errors.New("err turtle needs a human")
 )
 
@@ -32,7 +31,7 @@ func NewControllerService(repository ports.Repository, turtleBoot *turtleboot.Tu
 }
 
 // Sensing
-func (svc *ControllerService) FindTheStation() (*domain.StationResult, error) {
+func (svc *ControllerService) FindTheStation(timeWindow time.Duration) (*domain.StationResult, error) {
 	stations, err := svc.AnalyzeStationIndicator(timeWindow)
 
 	if err != nil {

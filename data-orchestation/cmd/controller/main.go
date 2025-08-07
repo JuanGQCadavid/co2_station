@@ -75,6 +75,8 @@ var (
 	// on Transit varaibles
 	maxAccomulativeErros = 5
 	waitingTIme          = 5 * time.Second
+
+	timeWindow = 24 * 31 * time.Hour // The last month
 )
 
 func init() {
@@ -117,7 +119,7 @@ func init() {
 func OnSensingFunc(_ *StateData) {
 	log.Println(" ---------- OnSensingFunc ---------- ")
 
-	theStation, err := service.FindTheStation()
+	theStation, err := service.FindTheStation(timeWindow)
 
 	if err != nil {
 		states[OnError](&StateData{

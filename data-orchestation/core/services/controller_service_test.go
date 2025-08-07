@@ -3,6 +3,7 @@ package services
 import (
 	"log"
 	"testing"
+	"time"
 
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/adapters/influxadapter"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +22,7 @@ func TestScores(t *testing.T) {
 
 	theController := NewControllerService(influxRepo, nil)
 
-	results, err := theController.FindTheStation()
+	results, err := theController.FindTheStation(24 * 31 * time.Hour)
 
 	if err != nil {
 		log.Println("Fuck we fail", err.Error())
