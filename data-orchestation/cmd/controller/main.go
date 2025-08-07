@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/adapters/actionsdatabase"
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/adapters/influxadapter"
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/adapters/slackadapter"
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/adapters/turtleboot"
@@ -55,10 +56,11 @@ type StateData struct {
 }
 
 var (
-	service    *services.ControllerService
-	slack      *slackadapter.SlackNotification
-	theTurtle  *turtleboot.TurtleBoot
-	repository ports.Repository
+	service           *services.ControllerService
+	slack             *slackadapter.SlackNotification
+	actionsRepository *actionsdatabase.ActionsRepository
+	theTurtle         *turtleboot.TurtleBoot
+	repository        ports.Repository
 
 	influxUri   string = os.Getenv("INFLUX_URI")
 	influxToken string = os.Getenv("INFLUX_TOKEN")
@@ -68,6 +70,13 @@ var (
 	slackChannelId string = os.Getenv("SLACK_CHANNEL_ID")
 
 	turtleIPAddress string = os.Getenv("TURTLE_IP_ADDRESS")
+
+	// host string, username string, password string, dbname string, port string
+	actionsHost     string = os.Getenv("ACTIONS_HOST")
+	actionsUsername string = os.Getenv("ACTIONS_USERNAME")
+	actionsPassword string = os.Getenv("ACTIONS_PASSWORD")
+	actionsDB       string = os.Getenv("ACTIONS_DB")
+	actionsPort     string = os.Getenv("ACTIONS_PORT")
 
 	// State Machine
 	states map[State]func(*StateData)
@@ -96,16 +105,21 @@ func init() {
 		panic("Missing turtle ip address")
 	}
 
+	if len(actionsHost) == 0 || len(actionsUsername) == 0 || len(actionsPassword) == 0 || len(actionsDB) == 0 || len(actionsPort) == 0 {
+		panic("Missing DB params")
+	}
+
 	slack = slackadapter.NewSlackNotification(slackTOken, slackChannelId)
 
 	repository = influxadapter.NewInfluxDBRepository(influxUri, influxToken, influxOrg)
+	actionsRepository = actionsdatabase.NewActionsDB(actionsHost, actionsUsername, actionsPassword, actionsDB, actionsPort)
 	theTurtle, err = turtleboot.NewTurtleBoot(turtleIPAddress)
 
 	if err != nil {
 		log.Fatal("err while connecting to the turtle gRPC", err.Error())
 	}
 
-	service = services.NewControllerService(repository, theTurtle)
+	service = services.NewControllerService(repository, theTurtle, actionsRepository)
 
 	states = map[State]func(*StateData){
 		OnSensing:         OnSensingFunc,
@@ -119,7 +133,7 @@ func init() {
 func OnSensingFunc(_ *StateData) {
 	log.Println(" ---------- OnSensingFunc ---------- ")
 
-	theStation, err := service.FindTheStation(timeWindow)
+	theStation, err := service.FindAndSaveTheStation(timeWindow)
 
 	if err == services.ErrSensorsNoSensing {
 		log.Println("There is not data on the database, sleeping for 1 min", err.Error())

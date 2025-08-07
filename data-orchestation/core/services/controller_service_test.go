@@ -20,7 +20,7 @@ func TestScores(t *testing.T) {
 		influxURI, influxToken, influxORG,
 	)
 
-	theController := NewControllerService(influxRepo, nil)
+	theController := NewControllerService(influxRepo, nil, nil)
 
 	results, err := theController.FindTheStation(24 * 31 * time.Hour)
 

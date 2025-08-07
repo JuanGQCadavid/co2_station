@@ -8,6 +8,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/adapters/actionsdatabase"
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/adapters/turtleboot"
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/domain"
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/ports"
@@ -20,14 +21,16 @@ var (
 )
 
 type ControllerService struct {
-	repository ports.Repository
-	turtleBoot *turtleboot.TurtleBoot
+	repository   ports.Repository
+	turtleBoot   *turtleboot.TurtleBoot
+	dbRepository *actionsdatabase.ActionsRepository
 }
 
-func NewControllerService(repository ports.Repository, turtleBoot *turtleboot.TurtleBoot) *ControllerService {
+func NewControllerService(repository ports.Repository, turtleBoot *turtleboot.TurtleBoot, dbRepository *actionsdatabase.ActionsRepository) *ControllerService {
 	return &ControllerService{
-		repository: repository,
-		turtleBoot: turtleBoot,
+		repository:   repository,
+		turtleBoot:   turtleBoot,
+		dbRepository: dbRepository,
 	}
 }
 
@@ -49,6 +52,17 @@ func (svc *ControllerService) FindTheStation(timeWindow time.Duration) (*domain.
 	})
 
 	return stations[0], nil
+}
+
+func (svc *ControllerService) FindAndSaveTheStation(timeWindow time.Duration) (*domain.StationResult, error) {
+	theSation, err := svc.FindTheStation(timeWindow)
+
+	if err != nil {
+		return nil, err
+	}
+
+	svc.dbRepository.SaveAction(theSation.StationIP, theSation.Indicator)
+	return theSation, nil
 }
 
 func (svc *ControllerService) AnalyzeStationIndicator(timeWindow time.Duration) ([]*domain.StationResult, error) {
