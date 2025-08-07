@@ -15,7 +15,8 @@ import (
 )
 
 var (
-	ErrTurtleDie = errors.New("err turtle needs a human")
+	ErrTurtleDie        = errors.New("err turtle needs a human")
+	ErrSensorsNoSensing = errors.New("err Sensors are not reporting!! check sensors")
 )
 
 type ControllerService struct {
@@ -40,7 +41,7 @@ func (svc *ControllerService) FindTheStation(timeWindow time.Duration) (*domain.
 	}
 
 	if len(stations) == 0 {
-		return nil, errors.New("err Sensors are not reporting!! check sensors")
+		return nil, ErrSensorsNoSensing
 	}
 
 	sort.Slice(stations, func(i, j int) bool {
