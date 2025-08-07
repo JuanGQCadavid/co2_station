@@ -8,21 +8,26 @@ import (
 	"sort"
 	"time"
 
+	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/adapters/turtleboot"
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/domain"
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/ports"
+	"github.com/JuanGQCadavid/co2_station/data-orchestation/pb"
 )
 
 var (
-	timeWindow = 24 * 31 * time.Hour // The last month
+	timeWindow   = 24 * 31 * time.Hour // The last month
+	ErrTurtleDie = errors.New("err turtle needs a human")
 )
 
 type ControllerService struct {
 	repository ports.Repository
+	turtleBoot *turtleboot.TurtleBoot
 }
 
-func NewControllerService(repository ports.Repository) *ControllerService {
+func NewControllerService(repository ports.Repository, turtleBoot *turtleboot.TurtleBoot) *ControllerService {
 	return &ControllerService{
 		repository: repository,
+		turtleBoot: turtleBoot,
 	}
 }
 
@@ -162,11 +167,42 @@ func (svc *ControllerService) getScoreOnRange(val float64, ranges [2]float64) fl
 
 // Moving to Intervation
 func (svc *ControllerService) InitMovement(stationIP string) error {
-	return nil
+	return svc.turtleBoot.MoveToStation(stationIP)
 }
 
-func (svc *ControllerService) WaitUntilDoneOrError(stationIP string) error {
-	return nil
+func (svc *ControllerService) WaitUntilDoneOrError(stationIP string, maxAccomualtiveErros int, waitTime time.Duration) error {
+	if err := svc.InitMovement(stationIP); err != nil {
+		return err
+	}
+
+	var (
+		accomulativeErros = 0
+		accomulativeError = errors.New("err while wating for report")
+	)
+
+	for accomulativeErros < maxAccomualtiveErros {
+		state, err := svc.turtleBoot.ReportStatus()
+
+		if err != nil {
+			log.Println("Err while geting status from bot ", err.Error())
+			accomulativeErros += 1
+			accomulativeError = errors.Join(accomulativeError, err)
+		}
+
+		switch state.State {
+		case pb.AgentState_IN_TRANSIT:
+			log.Println("Turtle in transit, sleeping")
+			time.Sleep(waitTime)
+		case pb.AgentState_IN_STATION, pb.AgentState_IN_BASE:
+			log.Println("Turtle reached station")
+			return nil
+		case pb.AgentState_ON_ERROR:
+			log.Println("Ups turtle needs a human!")
+			return ErrTurtleDie
+		}
+	}
+
+	return accomulativeError
 }
 
 // Intervening

@@ -9,6 +9,7 @@ import (
 
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/adapters/influxadapter"
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/adapters/slackadapter"
+	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/adapters/turtleboot"
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/ports"
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/services"
 )
@@ -56,6 +57,7 @@ type StateData struct {
 var (
 	service    *services.ControllerService
 	slack      *slackadapter.SlackNotification
+	theTurtle  *turtleboot.TurtleBoot
 	repository ports.Repository
 
 	influxUri   string = os.Getenv("INFLUX_URI")
@@ -65,11 +67,20 @@ var (
 	slackTOken     string = os.Getenv("SLACK_TOKEN")
 	slackChannelId string = os.Getenv("SLACK_CHANNEL_ID")
 
+	turtleIPAddress string = os.Getenv("TURTLE_IP_ADDRESS")
+
 	// State Machine
 	states map[State]func(*StateData)
+
+	// on Transit varaibles
+	maxAccomulativeErros = 5
+	waitingTIme          = 5 * time.Second
 )
 
 func init() {
+	var (
+		err error
+	)
 
 	if len(influxUri) == 0 || len(influxToken) == 0 || len(influxOrg) == 0 {
 		panic("Missing Influx env variables!")
@@ -79,10 +90,20 @@ func init() {
 		panic("Missing Slack env variables!")
 	}
 
+	if len(turtleIPAddress) == 0 {
+		panic("Missing turtle ip address")
+	}
+
 	slack = slackadapter.NewSlackNotification(slackTOken, slackChannelId)
 
 	repository = influxadapter.NewInfluxDBRepository(influxUri, influxToken, influxOrg)
-	service = services.NewControllerService(repository)
+	theTurtle, err = turtleboot.NewTurtleBoot(turtleIPAddress)
+
+	if err != nil {
+		log.Fatal("err while connecting to the turtle gRPC", err.Error())
+	}
+
+	service = services.NewControllerService(repository, theTurtle)
 
 	states = map[State]func(*StateData){
 		OnSensing:         OnSensingFunc,
@@ -128,8 +149,7 @@ func OnMovingToFunc(data *StateData) {
 		})
 		return
 	}
-
-	if err := service.WaitUntilDoneOrError(data.StationIP); err != nil {
+	if err := service.WaitUntilDoneOrError(data.StationIP, maxAccomulativeErros, waitingTIme); err != nil {
 		log.Println("Err while waiting for the movement finish", err.Error())
 
 		states[OnError](&StateData{
