@@ -37,39 +37,54 @@ services:
       - INFLUX_TOKEN=my-super-secret-auth-token
       - INFLUX_ORG=ut
 
-  turtle:
-    container_name: turtle
-    build:
-      context: ./data-orchestation
-      dockerfile: Base.Dockerfile
-      args: 
-        CMD: turtle
-    ports:
-      -  50051:50051
+  #########################
+  ##
+  ## This is a mock of the Turtle.
+  ## Uncomment if you want to test the controller.
+  ##
+  #########################
 
-  controller:
-    depends_on:
-      - mosquitto
-      - turtle
-      - database
-    container_name: controller
-    build:
-      context: ./data-orchestation
-      dockerfile: Base.Dockerfile
-      args: 
-        CMD: controller
-    environment:
-      - INFLUX_URI=http://influxdb2:8086
-      - INFLUX_TOKEN=my-super-secret-auth-token
-      - INFLUX_ORG=ut
-      - SLACK_TOKEN=${SLACK_TOKEN} #TODO
-      - SLACK_CHANNEL_ID=${SLACK_CHANNEL_ID} #TODO
-      - TURTLE_IP_ADDRESS=turtle:50051 #TODO
-      - ACTIONS_HOST=database
-      - ACTIONS_USERNAME=admin
-      - ACTIONS_PASSWORD=Asdf1234
-      - ACTIONS_DB=actions
-      - ACTIONS_PORT=5432
+  # turtle:
+  #   container_name: turtle
+  #   build:
+  #     context: ./data-orchestation
+  #     dockerfile: Base.Dockerfile
+  #     args: 
+  #       CMD: turtle
+  #   ports:
+  #     -  50051:50051
+
+
+  #########################
+  ##
+  ## Controller. State machine to controll the turtle
+  ## Commented as the turtle will be handled manually
+  ##
+  #########################
+
+  # controller:
+  #   depends_on:
+  #     - mosquitto
+  #     - turtle
+  #     - database
+  #   container_name: controller
+  #   build:
+  #     context: ./data-orchestation
+  #     dockerfile: Base.Dockerfile
+  #     args: 
+  #       CMD: controller
+  #   environment:
+  #     - INFLUX_URI=http://influxdb2:8086
+  #     - INFLUX_TOKEN=my-super-secret-auth-token
+  #     - INFLUX_ORG=ut
+  #     - SLACK_TOKEN=${SLACK_TOKEN} #TODO
+  #     - SLACK_CHANNEL_ID=${SLACK_CHANNEL_ID} #TODO
+  #     - TURTLE_IP_ADDRESS=turtle:50051 #TODO
+  #     - ACTIONS_HOST=database
+  #     - ACTIONS_USERNAME=admin
+  #     - ACTIONS_PASSWORD=Asdf1234
+  #     - ACTIONS_DB=actions
+  #     - ACTIONS_PORT=5432
   
   database:
     container_name: database
@@ -90,6 +105,8 @@ services:
       - database
     image: adminer
     restart: always
+    environment:
+      - ADMINER_DESIGN=pepa-linha
     ports:
       - 8080:8080
 
