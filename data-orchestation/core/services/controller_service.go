@@ -80,13 +80,36 @@ func (svc *ControllerService) AnalyzeStationIndicator(timeWindow time.Duration) 
 	for station, reportsOfStations := range reports {
 		stationResults = append(stationResults, &domain.StationResult{
 			StationIP: station,
-			Indicator: svc.GenerateIndicator(reportsOfStations),
+			Indicator: svc.GenerateIndicator(reportsOfStations).Indicator,
 		})
 	}
 	return stationResults, nil
 }
 
-func (svc *ControllerService) GenerateIndicator(reports []*domain.SensorReport) float64 {
+func (svc *ControllerService) AnalyzeStationIndicatorV2(timeWindow time.Duration) ([]*domain.SensorReport, error) {
+	reports, err := svc.repository.GetRecords(time.Now().Add(-timeWindow), time.Now())
+
+	if err != nil {
+		log.Println("Err from repository ", err.Error())
+		return nil, err
+	}
+
+	var (
+		stationResults = make([]*domain.SensorReport, 0, len(reports))
+	)
+
+	for _, reportsOfStations := range reports {
+		stationResults = append(stationResults, svc.GenerateIndicator(reportsOfStations))
+	}
+
+	sort.Slice(stationResults, func(i, j int) bool {
+		return stationResults[i].Indicator >= stationResults[j].Indicator
+	})
+
+	return stationResults, nil
+}
+
+func (svc *ControllerService) GenerateIndicator(reports []*domain.SensorReport) *domain.SensorReport {
 	var (
 		w_1 = 0.30 // CO2
 		w_2 = 0.25 // VOCs
@@ -100,6 +123,9 @@ func (svc *ControllerService) GenerateIndicator(reports []*domain.SensorReport) 
 		tempAvg float64
 		rhAvg   float64
 		aqiAvg  float64
+
+		// Station IP
+		stationIP string
 
 		// Reports length
 		reportsLength = float64(len(reports))
@@ -140,6 +166,7 @@ func (svc *ControllerService) GenerateIndicator(reports []*domain.SensorReport) 
 		tempAvg += rep.Temperature
 		rhAvg += rep.Humidity
 		aqiAvg += rep.AQI
+		stationIP = rep.StationIP
 	}
 
 	co2Avg = co2Avg / reportsLength
@@ -156,7 +183,17 @@ func (svc *ControllerService) GenerateIndicator(reports []*domain.SensorReport) 
 	t_4 = svc.getScoreOnRange(rhAvg, t_4_range)
 	t_5 = math.Max(0, (aqiAvg-t_5)/t_5)
 
-	return w_1*t_1*co2Avg + w_2*t_2*vocsAvg + w_3*t_3*tempAvg + w_4*t_4*rhAvg + w_5*t_5*aqiAvg
+	f := w_1*t_1*co2Avg + w_2*t_2*vocsAvg + w_3*t_3*tempAvg + w_4*t_4*rhAvg + w_5*t_5*aqiAvg
+
+	return &domain.SensorReport{
+		Indicator:   f,
+		CO2:         co2Avg,
+		StationIP:   stationIP,
+		AQI:         aqiAvg,
+		Humidity:    rhAvg,
+		Temperature: tempAvg,
+		Tvoc:        vocsAvg,
+	}
 }
 
 func (svc *ControllerService) getScoreOnRange(val float64, ranges [2]float64) float64 {

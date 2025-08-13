@@ -23,6 +23,7 @@ type SensorReport struct {
 	Humidity    float64   //_field:humidity
 	Temperature float64   //_field:temperature
 	Tvoc        float64   //_field:tvoc
+	Indicator   float64   //_field:tvoc
 }
 
 type StationResult struct {
