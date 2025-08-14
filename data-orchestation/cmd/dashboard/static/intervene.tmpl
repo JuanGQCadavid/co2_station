@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saved Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f8f9fa;
+    }
+
+    .back-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .center-box {
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      padding: 50px 100px;
+      border-radius: 15px;
+      text-align: center;
+    }
+
+    .center-box h1 {
+      margin: 0;
+      color: #155724;
+    }
+  </style>
+</head>
+<body>
+
+  <button class="back-button" onclick="history.back()">Go back</button>
+
+  <div class="center-box">
+    <h1>Station {{.Station}} with score {{.Score}}</h1>
+    <h1>Intervened.</h1>
+  </div>
+
+</body>
+</html>

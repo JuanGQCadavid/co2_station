@@ -65,6 +65,11 @@ func (svc *ControllerService) FindAndSaveTheStation(timeWindow time.Duration) (*
 	return theSation, nil
 }
 
+func (svc *ControllerService) SaveStation(stationIP string, score float64) error {
+	svc.dbRepository.SaveAction(stationIP, score)
+	return nil
+}
+
 func (svc *ControllerService) AnalyzeStationIndicator(timeWindow time.Duration) ([]*domain.StationResult, error) {
 	reports, err := svc.repository.GetRecords(time.Now().Add(-timeWindow), time.Now())
 

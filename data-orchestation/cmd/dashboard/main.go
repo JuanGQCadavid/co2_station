@@ -2,9 +2,11 @@ package main
 
 import (
 	_ "embed"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/cmd/dashboard/domain"
@@ -75,11 +77,54 @@ func main() {
 		})
 	})
 
+	r.POST("/intervene", Intervene)
+
 	r.Run("0.0.0.0:80")
 }
 
-func HomePage(c *gin.Context) {
+func Intervene(c *gin.Context) {
+	if err := c.Request.ParseForm(); err != nil {
+		log.Println(err.Error())
+		return
+	}
 
+	var (
+		station    = c.Request.Form.Get("Station")
+		score, err = strconv.ParseFloat(c.Request.Form.Get("Score"), 64)
+	)
+
+	if len(station) == 0 {
+		log.Println("Missing values: station: ", station, " score: ", score)
+		c.AbortWithStatusJSON(http.StatusBadRequest, domain.HttpError{
+			Error: "Missing values station or score",
+		})
+		return
+	}
+
+	if err != nil {
+		log.Println("Could not cast score: ", err.Error())
+		log.Println(c.Request.Form.Get("Score"))
+		c.AbortWithStatusJSON(http.StatusBadRequest, domain.HttpError{
+			Error: fmt.Sprintf("Could not cast score: %s", err.Error()),
+		})
+		return
+	}
+
+	if err := service.SaveStation(station, score); err != nil {
+		log.Println("Err while saving the station", err.Error())
+		c.AbortWithStatusJSON(http.StatusInternalServerError, domain.HttpError{
+			Error: fmt.Sprintf("Could save the data, err %s", err.Error()),
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "intervene.tmpl", gin.H{
+		"Station": station,
+		"Score":   fmt.Sprintf("%.2f", score),
+	})
+}
+
+func HomePage(c *gin.Context) {
 	results, err := service.AnalyzeStationIndicatorV2(timeWindow)
 
 	if err != nil {
@@ -92,5 +137,4 @@ func HomePage(c *gin.Context) {
 	c.HTML(http.StatusOK, "home.tmpl", gin.H{
 		"Sensors": results,
 	})
-
 }

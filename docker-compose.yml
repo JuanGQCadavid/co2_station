@@ -18,6 +18,7 @@ services:
     build:
       context: ./data-orchestation
       dockerfile: Base.Dockerfile
+      target: prod
       args: 
         CMD: drift
   
@@ -28,6 +29,7 @@ services:
     build:
       context: ./data-orchestation
       dockerfile: Base.Dockerfile
+      target: prod
       args: 
         CMD: exporter
     ports:
@@ -49,6 +51,7 @@ services:
   #   build:
   #     context: ./data-orchestation
   #     dockerfile: Base.Dockerfile
+  #     target: prod
   #     args: 
   #       CMD: turtle
   #   ports:
@@ -66,11 +69,12 @@ services:
   #   depends_on:
   #     - mosquitto
   #     - turtle
-  #     - database
+  #     - db
   #   container_name: controller
   #   build:
   #     context: ./data-orchestation
   #     dockerfile: Base.Dockerfile
+  #     target: prod
   #     args: 
   #       CMD: controller
   #   environment:
@@ -80,13 +84,36 @@ services:
   #     - SLACK_TOKEN=${SLACK_TOKEN} #TODO
   #     - SLACK_CHANNEL_ID=${SLACK_CHANNEL_ID} #TODO
   #     - TURTLE_IP_ADDRESS=turtle:50051 #TODO
-  #     - ACTIONS_HOST=database
+  #     - ACTIONS_HOST=db
   #     - ACTIONS_USERNAME=admin
   #     - ACTIONS_PASSWORD=Asdf1234
   #     - ACTIONS_DB=actions
   #     - ACTIONS_PORT=5432
+
+  dashboard:
+    depends_on:
+      - db
+      - influxdb2
+    container_name: dashboard
+    build:
+      context: ./data-orchestation
+      dockerfile: Base.Dockerfile
+      target: static
+      args: 
+        CMD: dashboard
+    environment:
+      - INFLUX_URI=http://influxdb2:8086
+      - INFLUX_TOKEN=my-super-secret-auth-token
+      - INFLUX_ORG=ut
+      - ACTIONS_HOST=db
+      - ACTIONS_USERNAME=admin
+      - ACTIONS_PASSWORD=Asdf1234
+      - ACTIONS_DB=actions
+      - ACTIONS_PORT=5432
+    ports:
+      -  80:80
   
-  database:
+  db:
     container_name: database
     image: postgres
     restart: always
@@ -102,7 +129,7 @@ services:
   
   adminer:
     depends_on:
-      - database
+      - db
     image: adminer
     restart: always
     environment:

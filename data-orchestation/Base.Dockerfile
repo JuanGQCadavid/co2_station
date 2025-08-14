@@ -23,3 +23,10 @@ FROM alpine:3.20 as prod
 COPY --from=builder /app/main /bin/
 ENTRYPOINT  ["/bin/main"]
 
+FROM alpine:3.20 as static
+COPY --from=builder /app/main /bin/
+ARG CMD
+COPY cmd/${CMD}/static /static
+ENTRYPOINT  ["/bin/main"]
+
+

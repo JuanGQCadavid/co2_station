@@ -82,8 +82,9 @@
 <body>
 
 <div class="top-bar">
-  <h3 style="margin: 0;" >Station Dashboard: <a target="_blank" rel="noopener noreferrer" href='http://localhost:8086/signin'>Open.</a></h3>
-  <h3 style="margin: 0;" >DB dashboard: <a target="_blank" rel="noopener noreferrer" href='http://localhost:8080'>Open.</a></h3>
+  <h3 style="margin: 0;" >Station Dashboard: (admin / Asdf1234) <a target="_blank" rel="noopener noreferrer" href='http://localhost:8086/signin'>Open.</a></h3>
+  <h3 style="margin: 0;" >DB dashboard:  (admin / Asdf1234 / actions) <a target="_blank" rel="noopener noreferrer" href='http://localhost:8080'>Open.</a></h3>
+    
   <button class="refresh-btn" onClick="window.location.reload();">Refresh</button>
 </div>
 
@@ -98,7 +99,13 @@
       <div>temperature: {{ $sensor.Temperature }}</div>
     </div>
     <div class="score-box score-red">Score: {{ $sensor.Indicator }}</div>
-    <button class="intervene-btn">intervene</button>
+
+    <form action="/intervene" method="POST">
+        <input type="hidden" name="Station" value="{{ $sensor.StationIP }}">
+        <input type="hidden" name="Score" value="{{ $sensor.Indicator }}">
+        <button class="intervene-btn" type="submit">intervene</button>
+    </form>
+    <!-- <button class="intervene-btn">intervene</button> -->
   </div>
   <hr>
 {{ end }}
