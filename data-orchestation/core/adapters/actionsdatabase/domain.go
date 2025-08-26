@@ -10,6 +10,7 @@ type ActionsDB struct {
 	ID              uint   `gorm:"primaryKey"`
 	StationID       string `gorm:"index"`
 	Datetime        time.Time
+	StoppedOn       time.Time
 	AirQualityScore float64
 
 	// GORM Variables

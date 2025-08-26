@@ -78,8 +78,40 @@ func main() {
 	})
 
 	r.POST("/intervene", Intervene)
+	r.POST("/intervene/stop", StopIntervention)
 
 	r.Run("0.0.0.0:80")
+}
+
+func StopIntervention(c *gin.Context) {
+	if err := c.Request.ParseForm(); err != nil {
+		log.Println(err.Error())
+		return
+	}
+
+	var (
+		interventionId = c.Request.Form.Get("id")
+	)
+
+	if len(interventionId) == 0 {
+		log.Println("Missing values: station: ", interventionId)
+		c.AbortWithStatusJSON(http.StatusBadRequest, domain.HttpError{
+			Error: "Missing values: interventionId",
+		})
+		return
+	}
+
+	if err := service.StopIntervention(interventionId); err != nil {
+		log.Println("Err while stopping the intervention", err.Error())
+		c.AbortWithStatusJSON(http.StatusInternalServerError, domain.HttpError{
+			Error: fmt.Sprintf("Could not save the data, err %s", err.Error()),
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "stop_intervention.tmpl", gin.H{
+		"InterventionId": interventionId,
+	})
 }
 
 func Intervene(c *gin.Context) {
@@ -110,7 +142,9 @@ func Intervene(c *gin.Context) {
 		return
 	}
 
-	if err := service.SaveStation(station, score); err != nil {
+	theStation, err := service.SaveStation(station, score)
+
+	if err != nil {
 		log.Println("Err while saving the station", err.Error())
 		c.AbortWithStatusJSON(http.StatusInternalServerError, domain.HttpError{
 			Error: fmt.Sprintf("Could save the data, err %s", err.Error()),
@@ -119,8 +153,9 @@ func Intervene(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "intervene.tmpl", gin.H{
-		"Station": station,
-		"Score":   fmt.Sprintf("%.2f", score),
+		"Station": theStation.StationIP,
+		"Score":   fmt.Sprintf("%.2f", theStation.Indicator),
+		"Id":      theStation.Id,
 	})
 }
 

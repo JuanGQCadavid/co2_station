@@ -29,6 +29,7 @@ type SensorReport struct {
 type StationResult struct {
 	StationIP string
 	Indicator float64
+	Id        uint
 }
 
 type TurtleState struct {

@@ -29,23 +29,14 @@
       cursor: pointer;
     }
 
+
+
     .center-box {
       background-color: #d4edda;
       border: 1px solid #c3e6cb;
       padding: 50px 100px;
       border-radius: 15px;
       text-align: center;
-    }
-
-    .intervene-btn {
-      background-color: #7C0A02;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      display: block;
-      margin: 0 auto;
     }
 
     .center-box h1 {
@@ -56,20 +47,11 @@
 </head>
 <body>
 
-  <button class="back-button" onclick="history.back()">Go back</button>
+  <button class="back-button" onclick="location.href = 'http://localhost/';">Go back</button>
 
   <div class="center-box">
-    <h1>Station {{.Station}} with score {{.Score}}</h1>
-    <h1>Intervened.</h1>
-
-    <form action="/intervene/stop" method="POST">
-        <input type="hidden" name="id" value="{{ .Id }}">
-        <button class="intervene-btn" type="submit">Stop intervention</button>
-    </form>
-  
+    <h1>Intervention with ID {{.InterventionId}} was stopped.</h1>
   </div>
-
-  
 
 </body>
 </html>

@@ -1,6 +1,9 @@
 package actionsdatabase
 
-import "testing"
+import (
+	"log"
+	"testing"
+)
 
 func TestCreation(t *testing.T) {
 
@@ -12,5 +15,11 @@ func TestCreation(t *testing.T) {
 		"5432",
 	)
 
-	server.SaveAction("192.168.1.233", 8779.98)
+	id, err := server.SaveAction("192.168.1.233", 8779.98)
+
+	if err != nil {
+		log.Panic(err.Error())
+	}
+
+	log.Println(id)
 }

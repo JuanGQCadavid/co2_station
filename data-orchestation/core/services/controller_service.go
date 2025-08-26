@@ -3,8 +3,10 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/adapters/actionsdatabase"
@@ -61,12 +63,40 @@ func (svc *ControllerService) FindAndSaveTheStation(timeWindow time.Duration) (*
 		return nil, err
 	}
 
-	svc.dbRepository.SaveAction(theSation.StationIP, theSation.Indicator)
+	id, err := svc.dbRepository.SaveAction(theSation.StationIP, theSation.Indicator)
+
+	if err != nil {
+		return theSation, err
+	}
+
+	theSation.Id = id
 	return theSation, nil
 }
 
-func (svc *ControllerService) SaveStation(stationIP string, score float64) error {
-	svc.dbRepository.SaveAction(stationIP, score)
+func (svc *ControllerService) SaveStation(stationIP string, score float64) (*domain.StationResult, error) {
+
+	var result = &domain.StationResult{
+		StationIP: stationIP,
+		Indicator: score,
+	}
+	id, err := svc.dbRepository.SaveAction(stationIP, score)
+
+	if err != nil {
+		return nil, err
+	}
+	result.Id = id
+	return result, nil
+}
+
+func (svc *ControllerService) StopIntervention(interventionId string) error {
+	interId, err := strconv.ParseUint(interventionId, 10, 64)
+
+	if err != nil {
+		fmt.Println("Error parsing:", err)
+		return fmt.Errorf("Error parsing the id %s", err.Error())
+	}
+
+	svc.dbRepository.StopIntervention(interId, time.Now())
 	return nil
 }
 
