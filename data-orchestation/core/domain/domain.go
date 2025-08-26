@@ -16,14 +16,14 @@ type StationReport struct {
 }
 
 type SensorReport struct {
-	Date        time.Time // _time:2025-07-28 13:16:00 +0000 UTC
-	StationIP   string    // ipAddress:192.168.0.62.
-	AQI         float64   //_field:aqi.
-	CO2         float64   // _field:co2
-	Humidity    float64   //_field:humidity
-	Temperature float64   //_field:temperature
-	Tvoc        float64   //_field:tvoc
-	Indicator   float64   //_field:tvoc
+	Date        time.Time `json:"-"`
+	StationIP   string    `json:"ipAddress"`
+	AQI         float64   `json:"aqi"`
+	CO2         float64   `json:"co2"`
+	Humidity    float64   `json:"humidity"`
+	Temperature float64   `json:"temperature"`
+	Tvoc        float64   `json:"tvoc"`
+	Indicator   float64   `json:"qualityIndicator"`
 }
 
 type StationResult struct {

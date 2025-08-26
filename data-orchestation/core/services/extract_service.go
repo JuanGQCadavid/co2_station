@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/domain"
+	"github.com/JuanGQCadavid/co2_station/data-orchestation/core/utils"
 	"github.com/eclipse/paho.golang/paho"
 )
 
@@ -21,7 +22,7 @@ func NewExtractService(topic string) *ExtractService {
 
 func (srv *ExtractService) Handle(msg paho.PublishReceived) (bool, error) {
 	var (
-		payload   *domain.StationReport = &domain.StationReport{}
+		payload   *domain.SensorReport = &domain.SensorReport{}
 		toPublish []byte
 	)
 
@@ -31,7 +32,11 @@ func (srv *ExtractService) Handle(msg paho.PublishReceived) (bool, error) {
 		return false, err
 	}
 
-	toPublish, err := json.Marshal(srv.applyCorrections(payload))
+	toPublish, err := json.Marshal(
+		srv.calcualteQualityIndicator(
+			srv.applyCorrections(payload),
+		),
+	)
 
 	if err != nil {
 		log.Println("Error while marhsaling", err.Error())
@@ -50,8 +55,13 @@ func (srv *ExtractService) Handle(msg paho.PublishReceived) (bool, error) {
 	return true, nil
 }
 
-func (srv *ExtractService) applyCorrections(payload *domain.StationReport) *domain.StationReport {
+func (srv *ExtractService) applyCorrections(payload *domain.SensorReport) *domain.SensorReport {
 	payload.Temperature = payload.Temperature - 4.43
 	payload.Humidity = payload.Humidity + 12.27
+	return payload
+}
+
+func (srv *ExtractService) calcualteQualityIndicator(payload *domain.SensorReport) *domain.SensorReport {
+	payload.Indicator = utils.CalculateIndicator(payload.CO2, payload.Tvoc, payload.Temperature, payload.Humidity, payload.AQI)
 	return payload
 }
