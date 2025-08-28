@@ -94,7 +94,7 @@ func CalculateIndicator(co2Avg, vocsAvg, tempAvg, rhAvg, aqiAvg float64) float64
 	t_4 = getScoreOnRange(rhAvg, t_4_range)
 	t_5 = math.Max(0, (aqiAvg-t_5)/t_5)
 
-	return w_1*t_1*co2Avg + w_2*t_2*vocsAvg + w_3*t_3*tempAvg + w_4*t_4*rhAvg + w_5*t_5*aqiAvg
+	return w_1*t_1 + w_2*t_2 + w_3*t_3 + w_4*t_4 + w_5*t_5
 }
 
 func getScoreOnRange(val float64, ranges [2]float64) float64 {
