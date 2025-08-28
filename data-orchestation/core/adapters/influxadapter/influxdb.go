@@ -16,7 +16,7 @@ var (
 		from(bucket: "stations")
 			|> range(start: %s, stop: %s)
 			|> filter(fn: (r) => r["_measurement"] == "sensor")
-			|> filter(fn: (r) => r["_field"] == "aqi" or r["_field"] == "co2" or r["_field"] == "humidity" or r["_field"] == "temperature" or r["_field"] == "tvoc")
+			|> filter(fn: (r) => r["_field"] == "aqi" or r["_field"] == "co2" or r["_field"] == "humidity" or r["_field"] == "temperature" or r["_field"] == "tvoc" or r["_field"] == "qualityIndicator")
 			|> filter(fn: (r) => r["topic"] == "report/drift")
 			|> aggregateWindow(every: 1m, fn: mean, createEmpty: false)
 			|> yield(name: "mean")
@@ -54,6 +54,8 @@ func (repo *InfluxDBRepository) GetRecords(start, stop time.Time) (map[string][]
 
 	// Casting
 	for result.Next() {
+		log.Println(result.Record().Values())
+
 		var (
 			ip = result.Record().Values()["ipAddress"].(string)
 		)
