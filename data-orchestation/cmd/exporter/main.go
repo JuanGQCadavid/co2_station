@@ -68,7 +68,7 @@ func ExportData(c *gin.Context) {
 	c.Writer.Header().Set("Content-Disposition", "attachment; filename=sensor_reports.csv")
 	c.Writer.Header().Set("Content-Type", "text/csv")
 	writer := csv.NewWriter(c.Writer)
-	header := []string{"Station", "Date", "IP", "AQI", "CO2", "Humidity", "Temperature", "TVOC"}
+	header := []string{"Station", "Date", "IP", "AQI", "CO2", "Humidity", "Temperature", "TVOC", "QualityScore"}
 	if err := writer.Write(header); err != nil {
 		c.String(http.StatusInternalServerError, "Error writing header")
 		return
@@ -85,6 +85,7 @@ func ExportData(c *gin.Context) {
 				fmt.Sprintf("%.2f", r.Humidity),
 				fmt.Sprintf("%.2f", r.Temperature),
 				fmt.Sprintf("%.2f", r.Tvoc),
+				fmt.Sprintf("%.2f", r.Indicator),
 			}
 			if err := writer.Write(row); err != nil {
 				c.String(http.StatusInternalServerError, "Error writing row")
