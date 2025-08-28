@@ -80,6 +80,8 @@ func (repo *InfluxDBRepository) GetRecords(start, stop time.Time) (map[string][]
 			reports[ip][result.Record().Time()].Temperature = result.Record().Value().(float64)
 		case "tvoc":
 			reports[ip][result.Record().Time()].Tvoc = result.Record().Value().(float64)
+		case "qualityIndicator":
+			reports[ip][result.Record().Time()].Indicator = result.Record().Value().(float64)
 		}
 		// fmt.Printf("Time: %s, Value: %v\n", result.Record().Time(), result.Record().Values())
 	}
